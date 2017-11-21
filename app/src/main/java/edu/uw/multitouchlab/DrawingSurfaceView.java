@@ -10,6 +10,8 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import java.util.HashMap;
+
 /**
  * An example SurfaceView for generating graphics on
  * @author Joel Ross
@@ -31,6 +33,8 @@ public class DrawingSurfaceView extends SurfaceView implements SurfaceHolder.Cal
     private Paint goldPaint; //drawing variables (pre-defined for speed)
 
     public Ball ball; //public for easy access
+
+    HashMap<Integer, Ball> fingerToBall;
 
 
     /**
@@ -69,7 +73,28 @@ public class DrawingSurfaceView extends SurfaceView implements SurfaceHolder.Cal
      */
     public void init(){
         //make ball
-        ball = new Ball(viewWidth/2, viewHeight/2, 100);
+        this.ball = new Ball(viewWidth/2, viewHeight/2, 100);
+        this.fingerToBall = new HashMap<Integer, Ball>();
+    }
+
+    // New finger touched
+    // Add new ball
+    public synchronized void addTouch(int pointer, float cx, float cy, float radius) {
+        this.fingerToBall.put(pointer, new Ball(cx, cy, radius));
+    }
+
+    // Finger lifted up
+    // Remove ball
+    public synchronized void removeTouch(int pointer) {
+        this.fingerToBall.remove(pointer);
+    }
+
+    // Finger moved
+    public synchronized void moveTouch(int pointer, float cx, float cy) {
+        Ball toMove = fingerToBall.get(pointer);
+        toMove.setX(cx);
+        toMove.setY(cy);
+        fingerToBall.put(pointer, toMove);
     }
 
 
@@ -90,7 +115,11 @@ public class DrawingSurfaceView extends SurfaceView implements SurfaceHolder.Cal
 
         canvas.drawColor(Color.rgb(51,10,111)); //purple out the background
 
-        canvas.drawCircle(ball.cx, ball.cy, ball.radius, whitePaint); //we can draw directly onto the canvas
+//        canvas.drawCircle(ball.cx, ball.cy, ball.radius, whitePaint); //we can draw directly onto the canvas
+        for (int pointer : fingerToBall.keySet()) {
+            Ball toDraw = fingerToBall.get(pointer);
+            canvas.drawCircle(toDraw.cx, toDraw.cy, toDraw.radius, whitePaint);
+        }
     }
 
 
